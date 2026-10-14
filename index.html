@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f97316">
+  <title>Yumzo — Local food, delivered</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#"><span class="logo">Y</span> yumzo</a>
+  <span class="tagline">Local food. Real orders.</span>
+  <button id="signout" class="secondary hidden">Sign out</button>
+</header>
+<main class="wrap">
+  <section class="hero">
+    <div><p class="eyebrow">YOUR LOCAL FOOD PLATFORM</p><h1>Good food,<br><span>closer to home.</span></h1>
+    <p>Discover local restaurants, place orders, and manage your food business in one place.</p></div>
+    <div class="hero-badge">🍲 <b>Made for local communities</b><small>Customer · Restaurant · Delivery</small></div>
+  </section>
+
+  <section id="setupNotice" class="notice">
+    <h2>Connect your real backend</h2>
+    <p>This app uses Supabase for real accounts, database records, and image storage. Add your project details in <code>app.js</code>, then run <code>supabase/schema.sql</code> in the Supabase SQL Editor.</p>
+  </section>
+
+  <section id="authPanel" class="panel">
+    <div class="panel-head"><div><p class="eyebrow">GET STARTED</p><h2>Your Yumzo account</h2></div></div>
+    <div class="form-grid">
+      <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters"></label>
+    </div>
+    <div class="actions"><button id="signup">Create account</button><button id="login" class="secondary">Log in</button></div>
+    <p id="authMessage" class="message" aria-live="polite"></p>
+    <p class="muted">Restaurant and delivery access should be granted by the platform admin after registration/verification.</p>
+  </section>
+
+  <section id="appPanel" class="hidden">
+    <section class="panel account-row">
+      <div><p class="eyebrow">SIGNED IN</p><h2 id="userEmail">Account</h2><p id="roleLabel" class="muted"></p></div>
+      <label class="compact">Display name<input id="displayName" placeholder="Your name"></label>
+      <button id="saveProfile" class="secondary">Save name</button>
+    </section>
+
+    <nav class="tabs" aria-label="Yumzo sections">
+      <button class="tab active" data-tab="customerView">Find food</button>
+      <button class="tab" data-tab="ownerView">Restaurant owner</button>
+      <button class="tab" data-tab="deliveryView">Delivery</button>
+      <button class="tab" data-tab="ordersView">My orders</button>
+    </nav>
+
+    <section id="customerView" class="panel view">
+      <div class="panel-head"><div><p class="eyebrow">CUSTOMER</p><h2>Restaurants near you</h2></div><button id="refreshRestaurants" class="secondary">Refresh</button></div>
+      <div class="searchrow"><input id="restaurantSearch" placeholder="Search restaurants or food"><button id="searchBtn">Search</button></div>
+      <div id="restaurantList" class="cards"></div>
+      <div id="menuArea" class="subpanel hidden"><h3 id="menuTitle">Menu</h3><div id="menuList" class="menu-list"></div></div>
+      <div class="subpanel">
+        <h3>Your cart</h3><div id="cartList"></div>
+        <label>Delivery address<textarea id="deliveryAddress" rows="2" placeholder="House/village/landmark"></textarea></label>
+        <p id="cartTotal" class="total">Total: ₹0</p>
+        <button id="placeOrder">Place COD order</button>
+        <p id="customerMessage" class="message" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="ownerView" class="panel view hidden">
+      <div class="panel-head"><div><p class="eyebrow">RESTAURANT PARTNER</p><h2>Manage your restaurant</h2></div></div>
+      <p class="muted">Create a restaurant listing. Admin approval may be required before customers can see it.</p>
+      <div class="form-grid">
+        <label>Restaurant name<input id="restName" placeholder="e.g. Aviral Food Corner"></label>
+        <label>Phone<input id="restPhone" type="tel" placeholder="Contact number"></label>
+        <label>Area / village<input id="restArea" placeholder="Your delivery area"></label>
+        <label>Delivery fee (₹)<input id="restFee" type="number" min="0" value="20"></label>
+      </div>
+      <label>About restaurant<textarea id="restDescription" rows="2" placeholder="Food type, opening hours, etc."></textarea></label>
+      <button id="saveRestaurant">Save restaurant</button><p id="ownerMessage" class="message"></p>
+      <hr>
+      <h3>Your restaurant listings</h3><div id="ownerRestaurants" class="cards"></div>
+      <div id="menuEditor" class="subpanel hidden">
+        <h3 id="menuEditorTitle">Add menu item</h3>
+        <input id="selectedRestaurantId" type="hidden">
+        <div class="form-grid">
+          <label>Item name<input id="itemName" placeholder="Chicken biryani"></label>
+          <label>Price (₹)<input id="itemPrice" type="number" min="1" placeholder="120"></label>
+          <label>Category<input id="itemCategory" placeholder="Biryani"></label>
+          <label>Food photo<input id="itemImage" type="file" accept="image/*" capture="environment"></label>
+        </div>
+        <label>Description<input id="itemDescription" placeholder="Short description"></label>
+        <button id="saveMenuItem">Save menu item</button><p id="menuMessage" class="message"></p>
+        <div id="ownerMenuItems" class="menu-list"></div>
+        <h3>AI food image</h3>
+        <p class="muted">This calls a server-side Supabase Edge Function. Set an AI provider key as a server secret first; never put secret keys in this webpage.</p>
+        <div class="searchrow"><input id="aiFoodPrompt" placeholder="e.g. Indian chicken biryani in a ceramic bowl"><button id="generateImage">Generate image</button></div>
+        <div id="aiImageResult"></div>
+      </div>
+      <h3>Incoming orders</h3><div id="ownerOrders" class="order-list"></div>
+    </section>
+
+    <section id="deliveryView" class="panel view hidden">
+      <div class="panel-head"><div><p class="eyebrow">DELIVERY PARTNER</p><h2>Delivery queue</h2></div><button id="refreshDelivery" class="secondary">Refresh</button></div>
+      <p class="muted">Delivery access is admin-granted. This list only shows orders eligible for delivery in your database policies.</p>
+      <div id="deliveryOrders" class="order-list"></div>
+    </section>
+
+    <section id="ordersView" class="panel view hidden">
+      <div class="panel-head"><div><p class="eyebrow">ORDER HISTORY</p><h2>Your orders</h2></div><button id="refreshOrders" class="secondary">Refresh</button></div>
+      <div id="myOrders" class="order-list"></div>
+    </section>
+  </section>
+  <footer>Yumzo · Real backend starter · COD enabled first</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
